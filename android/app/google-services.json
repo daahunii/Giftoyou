@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1094126769484",
+    "project_id": "giftoyou-ad070",
+    "storage_bucket": "giftoyou-ad070.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1094126769484:android:1698f02964f936d65aabe9",
+        "android_client_info": {
+          "package_name": "com.example.giftoyou"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBLJHejjK8gZaq5VAufqIft7KEsVTD3SaY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyAo6J0qcEr4bQovhlB0XsPqQMPX1Dq1Z8Y</string>
+	<key>GCM_SENDER_ID</key>
+	<string>1094126769484</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.giftoyou</string>
+	<key>PROJECT_ID</key>
+	<string>giftoyou-ad070</string>
+	<key>STORAGE_BUCKET</key>
+	<string>giftoyou-ad070.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:1094126769484:ios:5e4a6c3360e97e6e5aabe9</string>
+</dict>
+</plist>
