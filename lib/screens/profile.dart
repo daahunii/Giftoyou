@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -6,6 +7,12 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+
+    final user = FirebaseAuth.instance.currentUser;
+    final displayName = user?.displayName;
+    final userName = displayName != null && displayName.isNotEmpty
+        ? displayName
+        : (user?.email?.split('@').first ?? 'User');
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -26,7 +33,8 @@ class ProfilePage extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.logout, color: Colors.black87),
-                    onPressed: () {
+                    onPressed: () async {
+                      await FirebaseAuth.instance.signOut();
                       Navigator.pushReplacementNamed(context, '/login');
                     },
                   ),
@@ -39,11 +47,11 @@ class ProfilePage extends StatelessWidget {
                 backgroundImage: AssetImage('assets/gift_close.png'),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'User',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              Text(
+                userName,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 15),
               Container(
                 width: width,
                 padding: const EdgeInsets.symmetric(vertical: 12),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'signup.dart';
 import 'home.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -74,6 +75,23 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
+  Future<void> _loginWithEmail() async {
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Home()),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("로그인 실패: ${e.toString()}")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -125,9 +143,9 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                       style: TextStyle(fontSize: 13),
                     ),
                     const SizedBox(height: 20),
-                    Align(
+                    const Align(
                       alignment: Alignment.centerLeft,
-                      child: const Text(
+                      child: Text(
                         'Email',
                         style: TextStyle(color: Colors.black54, fontSize: 13),
                       ),
@@ -144,9 +162,9 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Align(
+                    const Align(
                       alignment: Alignment.centerLeft,
-                      child: const Text(
+                      child: Text(
                         'Password',
                         style: TextStyle(color: Colors.black54, fontSize: 13),
                       ),
@@ -185,12 +203,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                             borderRadius: BorderRadius.circular(6),
                           ),
                         ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => Home()),
-                          );
-                        },
+                        onPressed: _loginWithEmail,
                         child: const Text(
                           'Login',
                           style: TextStyle(

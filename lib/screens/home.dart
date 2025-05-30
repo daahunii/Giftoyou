@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:giftoyou/screens/profile.dart';
-import 'dart:math' as math;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'addfriends.dart';
 import 'gift.dart';
 import 'profile.dart';
@@ -17,7 +16,6 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   int _currentIndex = 0;
-
   final List<Widget> _pages = [
     const HomeContent(),
     const CalendarPage(),
@@ -63,6 +61,8 @@ class HomeContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+    final user = FirebaseAuth.instance.currentUser;
+    final userName = user?.displayName ?? user?.email?.split('@').first ?? "User";
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -74,9 +74,9 @@ class HomeContent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 24),
-                const Text(
-                  "Welcome, User",
-                  style: TextStyle(
+                Text(
+                  "Welcome, $userName",
+                  style: const TextStyle(
                     color: Color(0xFF3F414E),
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -140,7 +140,6 @@ class HomeContent extends StatelessWidget {
       ),
     );
   }
-
 
   Widget _buildFeatureCard({
     required BuildContext context,
