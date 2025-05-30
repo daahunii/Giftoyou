@@ -9,10 +9,70 @@ class Login extends StatefulWidget {
   State<Login> createState() => _LoginState();
 }
 
-class _LoginState extends State<Login> {
+class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscureText = true;
+
+  late AnimationController _gradientController;
+  late Animation<Alignment> _beginAlignment;
+  late Animation<Alignment> _endAlignment;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _gradientController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6),
+    )..repeat(reverse: true);
+
+    _beginAlignment = TweenSequence<Alignment>([
+      TweenSequenceItem(
+        tween: Tween(begin: Alignment.bottomLeft, end: Alignment.topLeft),
+        weight: 1,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: Alignment.topLeft, end: Alignment.topRight),
+        weight: 1,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: Alignment.topRight, end: Alignment.bottomRight),
+        weight: 1,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: Alignment.bottomRight, end: Alignment.bottomLeft),
+        weight: 1,
+      ),
+    ]).animate(_gradientController);
+
+    _endAlignment = TweenSequence<Alignment>([
+      TweenSequenceItem(
+        tween: Tween(begin: Alignment.topRight, end: Alignment.bottomRight),
+        weight: 1,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: Alignment.bottomRight, end: Alignment.bottomLeft),
+        weight: 1,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: Alignment.bottomLeft, end: Alignment.topLeft),
+        weight: 1,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: Alignment.topLeft, end: Alignment.topRight),
+        weight: 1,
+      ),
+    ]).animate(_gradientController);
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _gradientController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,16 +80,22 @@ class _LoginState extends State<Login> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      body: Container(
-        width: width,
-        height: height,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment(0.15, -0.04),
-            end: Alignment(0.94, 0.67),
-            colors: [Color(0xFFF3F3F3), Color(0xFFC9F4FC)],
-          ),
-        ),
+      body: AnimatedBuilder(
+        animation: _gradientController,
+        builder: (context, child) {
+          return Container(
+            width: width,
+            height: height,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: _beginAlignment.value,
+                end: _endAlignment.value,
+                colors: const [Color(0xFFF3F3F3), Color(0xFFC9F4FC)],
+              ),
+            ),
+            child: child,
+          );
+        },
         child: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: width * 0.08),
@@ -179,26 +245,26 @@ class _LoginState extends State<Login> {
                     ),
                     const SizedBox(height: 20),
                     Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                            const Text("Don’t have an account? "),
-                            GestureDetector(
-                            onTap: () {
-                                Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const SignUp()),
-                                );
-                            },
-                            child: const Text(
-                                "Sign Up",
-                                style: TextStyle(
-                                color: Color(0xFF160062),
-                                fontWeight: FontWeight.bold,
-                                decoration: TextDecoration.underline,
-                                ),
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text("Don’t have an account? "),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const SignUp()),
+                            );
+                          },
+                          child: const Text(
+                            "Sign Up",
+                            style: TextStyle(
+                              color: Color(0xFF160062),
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
                             ),
-                            ),
-                        ],
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     Text.rich(

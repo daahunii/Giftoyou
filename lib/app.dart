@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'screens/splash.dart';
 import 'screens/home.dart';
 import 'screens/login.dart';
+import 'screens/recommendList.dart';
 
 class GiftoYouApp extends StatelessWidget {
   const GiftoYouApp({super.key});
@@ -20,6 +21,7 @@ class GiftoYouApp extends StatelessWidget {
         '/': (context) => const Splash(),
         '/home': (context) => Home(),
         '/login': (context) => const Login(),
+        '/recommendList': (context) => const RecommendListPage(),
       },
     );
   }

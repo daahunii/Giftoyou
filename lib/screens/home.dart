@@ -6,6 +6,7 @@ import 'gift.dart';
 import 'profile.dart';
 import 'notification.dart';
 import 'calendar.dart';
+import 'friendsList.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -115,7 +116,7 @@ class HomeContent extends StatelessWidget {
                       textColor: const Color(0xFF3F414E),
                       buttonColor: const Color(0xFF3F414E),
                       buttonTextColor: Colors.white,
-                      navigateTo: const Gift(),
+                      navigateTo: const FriendsListPage(),
                     ),
                   ],
                 ),
