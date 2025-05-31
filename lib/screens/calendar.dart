@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -11,11 +13,7 @@ class CalendarPage extends StatefulWidget {
 class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderStateMixin {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  final Map<DateTime, List<String>> _events = {
-    DateTime.utc(2025, 4, 2): ['루비의 생일🎂', '제이스의 대학 입학🎉', '파이의 졸업기념🍰'],
-    DateTime.utc(2025, 4, 3): ['회의'],
-    DateTime.utc(2025, 4, 10): ['세미나'],
-  };
+  final Map<DateTime, List<String>> _events = {};
 
   late final TextEditingController _eventController;
   late final AnimationController _animationController;
@@ -33,6 +31,65 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
       parent: _animationController,
       curve: Curves.easeOutBack,
     );
+    _fetchEvents();
+  }
+
+  Future<void> _fetchEvents() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final loadedEvents = <DateTime, List<String>>{};
+
+    // 1. 사용자 커스텀 이벤트
+    final eventsSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('events')
+        .get();
+
+    for (var doc in eventsSnapshot.docs) {
+      final data = doc.data();
+      final rawDate = data['date'];
+      DateTime? date;
+
+      if (rawDate is Timestamp) {
+        date = rawDate.toDate();
+      } else if (rawDate is String) {
+        date = DateTime.tryParse(rawDate);
+      }
+      if (date == null) continue;
+
+      final day = DateTime.utc(date.year, date.month, date.day);
+      final title = data['title'] ?? '기념일';
+      loadedEvents[day] = [...?loadedEvents[day], title];
+    }
+
+    // 2. 친구 생일
+    final friendsSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('friends')
+        .get();
+
+    for (var doc in friendsSnapshot.docs) {
+      final data = doc.data();
+      final birthdayStr = data['birthday'];
+      final name = data['name'] ?? '이름 없는 친구';
+
+      if (birthdayStr is String) {
+        final parsed = DateTime.tryParse(birthdayStr);
+        if (parsed != null) {
+          final birthday = DateTime.utc(_focusedDay.year, parsed.month, parsed.day);
+          final label = "$name 생일 🎂";
+          loadedEvents[birthday] = [...?loadedEvents[birthday], label];
+        }
+      }
+    }
+
+    setState(() {
+      _events.clear();
+      _events.addAll(loadedEvents);
+    });
   }
 
   @override
@@ -126,17 +183,23 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
                 child: const Text('취소', style: TextStyle(color: Color.fromARGB(255, 78, 78, 78))),
               ),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   final newEvent = _eventController.text.trim();
                   if (newEvent.isNotEmpty && _selectedDay != null) {
                     final day = DateTime.utc(_selectedDay!.year, _selectedDay!.month, _selectedDay!.day);
-                    setState(() {
-                      if (_events[day] == null) {
-                        _events[day] = [newEvent];
-                      } else {
-                        _events[day]!.add(newEvent);
-                      }
-                    });
+
+                    final uid = FirebaseAuth.instance.currentUser?.uid;
+                    if (uid != null) {
+                      await FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(uid)
+                          .collection('events')
+                          .add({
+                        'title': newEvent,
+                        'date': Timestamp.fromDate(day),
+                      });
+                      _fetchEvents();
+                    }
                   }
                   _eventController.clear();
                   Navigator.pop(context);

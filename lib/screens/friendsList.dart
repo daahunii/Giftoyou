@@ -1,22 +1,14 @@
 import 'package:flutter/material.dart';
-import 'searchGift.dart';
+import 'package:provider/provider.dart';
+import '../provider/friends_provider.dart';
+import '../screens/searchGift.dart';
 
 class FriendsListPage extends StatelessWidget {
   const FriendsListPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, String>> friends = [
-      {"name": "Lyndsey", "avatar": "assets/lyndsey.jpg", "status": "online"},
-      {"name": "Mom💝", "avatar": "assets/mom.jpg", "status": "online"},
-      {"name": "Elliott", "avatar": "assets/elliott.jpg", "status": "offline"},
-      {"name": "Lauren", "avatar": "assets/lauren.jpg", "status": "online"},
-      {"name": "Iddris", "avatar": "assets/iddris.jpg", "status": "online"},
-      {"name": "The NBHD", "avatar": "assets/nbhd.jpg", "status": "offline"},
-      {"name": "Canyon Club", "avatar": "assets/canyon.jpg", "status": "offline"},
-      {"name": "Tobias", "avatar": "assets/tobias.jpg", "status": "offline"},
-      {"name": "Karla", "avatar": "assets/karla.jpg", "status": "online"},
-    ];
+    final friendsProvider = Provider.of<FriendsProvider>(context, listen: false);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -34,7 +26,6 @@ class FriendsListPage extends StatelessWidget {
                     children: [
                       Icon(Icons.more_horiz, color: Colors.black),
                       SizedBox(width: 8),
-                      Icon(Icons.edit_outlined, color: Colors.blue),
                     ],
                   ),
                 ],
@@ -59,59 +50,61 @@ class FriendsListPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: friends.length * 2,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 20,
-                  mainAxisSpacing: 20,
-                  childAspectRatio: 0.8,
-                ),
-                itemBuilder: (context, index) {
-                  final friend = friends[index % friends.length];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SearchGiftPage(
-                            friendName: friend["name"]!,
-                            avatarPath: friend["avatar"]!,
-                          ),
+              child: FutureBuilder(
+                future: friendsProvider.loadFriends(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState != ConnectionState.done) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final friends = friendsProvider.friends;
+
+                  if (friends.isEmpty) {
+                    return const Center(child: Text("추가된 친구가 없습니다."));
+                  }
+
+                  return GridView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: friends.length,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 20,
+                      mainAxisSpacing: 20,
+                      childAspectRatio: 0.8,
+                    ),
+                    itemBuilder: (context, index) {
+                      final friend = friends[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SearchGiftPage(
+                                friendName: friend.name,
+                                avatarPath: friend.photoUrl,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Column(
+                          children: [
+                            Stack(
+                              children: [
+                                CircleAvatar(
+                                  radius: 38,
+                                  backgroundImage: NetworkImage(friend.photoUrl),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              friend.name,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ],
                         ),
                       );
                     },
-                    child: Column(
-                      children: [
-                        Stack(
-                          children: [
-                            CircleAvatar(
-                              radius: 38,
-                              backgroundImage: AssetImage(friend["avatar"]!),
-                            ),
-                            if (friend['status'] == 'online')
-                              Positioned(
-                                bottom: 2,
-                                right: 2,
-                                child: Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              )
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          friend["name"]!,
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                      ],
-                    ),
                   );
                 },
               ),

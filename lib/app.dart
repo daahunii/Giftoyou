@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'screens/splash.dart';
 import 'screens/home.dart';
 import 'screens/login.dart';
@@ -16,6 +17,16 @@ class GiftoYouApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         fontFamily: 'Pretendard', // 원하는 폰트로 설정
       ),
+      // ✅ 지역화 지원 추가
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ko', 'KR'),
+        Locale('en', 'US'),
+      ],
       initialRoute: '/',
       routes: {
         '/': (context) => const Splash(),

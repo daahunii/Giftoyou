@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class SearchGiftPage extends StatefulWidget {
   final String friendName;
@@ -23,6 +24,8 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
   late final Animation<Alignment> _beginAlignAnim;
   late final Animation<Alignment> _endAlignAnim;
 
+  String? _downloadedAvatarUrl;
+
   @override
   void initState() {
     super.initState();
@@ -35,20 +38,9 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
       });
     });
 
-    _waveController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
-
-    _dotController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    )..repeat();
-
-    _bgController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 6),
-    )..repeat(reverse: true);
+    _waveController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat();
+    _dotController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000))..repeat();
+    _bgController = AnimationController(vsync: this, duration: const Duration(seconds: 6))..repeat(reverse: true);
 
     _beginAlignAnim = Tween<Alignment>(
       begin: const Alignment(0.07, 0.75),
@@ -59,6 +51,20 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
       begin: const Alignment(0.93, 0.25),
       end: const Alignment(1.3, 1.3),
     ).animate(CurvedAnimation(parent: _bgController, curve: Curves.easeInOut));
+
+    _loadAvatarImage();
+  }
+
+  Future<void> _loadAvatarImage() async {
+    try {
+      final ref = FirebaseStorage.instance.refFromURL(widget.avatarPath);
+      final url = await ref.getDownloadURL();
+      setState(() {
+        _downloadedAvatarUrl = url;
+      });
+    } catch (e) {
+      print("이미지 다운로드 실패: $e");
+    }
   }
 
   @override
@@ -94,20 +100,16 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
           children: List.generate(3, (i) {
             final scale = 1.0 + _waveController.value + i * 0.4;
             final opacity = (1.0 - _waveController.value).clamp(0.0, 1.0);
-
             return Transform.scale(
               scale: scale,
               child: Opacity(
                 opacity: opacity * (1 - i * 0.3),
                 child: Container(
-                  width: 120,
-                  height: 120,
+                  width: 180,
+                  height: 180,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFFADC7FF),
-                      width: 1.2,
-                    ),
+                    border: Border.all(color: const Color(0xFFADC7FF), width: 1.2),
                   ),
                 ),
               ),
@@ -126,96 +128,111 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
           const SizedBox(height: 100),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: widget.friendName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF3F51B5),
-                      fontSize: 18,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+              child: Text.rich(
+                key: ValueKey(_isLoading),
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: widget.friendName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF3F51B5),
+                        fontSize: 18,
+                      ),
                     ),
-                  ),
-                  TextSpan(
-                    text: _isLoading
-                        ? ' 님께 어울릴만한\n선물 탐색 중...'
-                        : ' 님께 어울릴만한\n선물리스트가 나왔어요!',
-                    style: const TextStyle(
-                      color: Color(0xFF3F51B5),
-                      fontSize: 18,
+                    TextSpan(
+                      text: _isLoading
+                          ? ' 님께 어울릴만한\n선물 탐색 중...'
+                          : ' 님께 어울릴만한\n선물리스트가 나왔어요!',
+                      style: const TextStyle(
+                        color: Color(0xFF3F51B5),
+                        fontSize: 18,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
           ),
           const SizedBox(height: 10),
           if (_isLoading)
             const Text('11 mins ago', style: TextStyle(color: Colors.grey)),
           const SizedBox(height: 40),
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              if (_isLoading) _buildWaveBackground(),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                    )
-                  ],
-                ),
-                child: CircleAvatar(
-                  backgroundImage: AssetImage(widget.avatarPath),
-                  radius: 80,
-                ),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 500),
+            transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+            child: Container(
+              key: ValueKey(_isLoading),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
+                ],
               ),
-            ],
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  if (_isLoading) _buildWaveBackground(),
+                  CircleAvatar(
+                    backgroundImage: _downloadedAvatarUrl != null
+                        ? NetworkImage(_downloadedAvatarUrl!)
+                        : const AssetImage('assets/gift_close.png') as ImageProvider,
+                    radius: 80,
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 100),
-          _isLoading
-              ? Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(3, (index) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: _buildDot(index),
-                    );
-                  }),
-                )
-              : ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/recommendList',
-                    arguments: {
-                      'friendName': widget.friendName,
-                      'avatarPath': widget.avatarPath,
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 400),
+            transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+            child: _isLoading
+                ? Row(
+                    key: const ValueKey(true),
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(3, (index) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: _buildDot(index),
+                      );
+                    }),
+                  )
+                : ElevatedButton(
+                    key: const ValueKey(false),
+                    onPressed: () {
+                      Navigator.pushNamed(
+                        context,
+                        '/recommendList',
+                        arguments: {
+                          'friendName': widget.friendName,
+                          'avatarPath': widget.avatarPath,
+                        },
+                      );
                     },
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0D63D1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0D63D1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                    ),
+                    child: const Text(
+                      '선물하기',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-                ),
-                child: const Text(
-                  '선물하기',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-            ),
+          ),
         ],
       ),
     );

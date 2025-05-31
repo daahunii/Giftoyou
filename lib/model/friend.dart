@@ -13,7 +13,7 @@ class Friend {
     required this.photoUrl,
   });
 
-  // Firestore에서 불러올 때
+  /// Firestore에서 가져올 때
   factory Friend.fromMap(String id, Map<String, dynamic> data) {
     return Friend(
       id: id,
@@ -24,7 +24,7 @@ class Friend {
     );
   }
 
-  // Firestore에 저장할 때
+  /// Firestore에 저장할 때
   Map<String, dynamic> toMap() {
     return {
       'name': name,
@@ -32,5 +32,22 @@ class Friend {
       'sns': sns,
       'photoUrl': photoUrl,
     };
+  }
+
+  /// 일부 필드만 수정한 새 인스턴스를 반환
+  Friend copyWith({
+    String? id,
+    String? name,
+    String? birthday,
+    String? sns,
+    String? photoUrl,
+  }) {
+    return Friend(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      birthday: birthday ?? this.birthday,
+      sns: sns ?? this.sns,
+      photoUrl: photoUrl ?? this.photoUrl,
+    );
   }
 }

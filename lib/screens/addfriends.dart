@@ -40,6 +40,24 @@ class _AddFriendsState extends State<AddFriends> {
     }
   }
 
+  Future<void> _selectBirthday(BuildContext context) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100),
+      helpText: '친구 생일을 선택하세요',
+      locale: const Locale('ko', 'KR'),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _birthdayController.text =
+            '${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+      });
+    }
+  }
+
   Future<void> _uploadFriendData() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
@@ -49,7 +67,17 @@ class _AddFriendsState extends State<AddFriends> {
       return;
     }
 
-    String imageUrl = "https://via.placeholder.com/150"; // 기본 이미지
+    if (_nameController.text.isEmpty ||
+        _birthdayController.text.isEmpty ||
+        _snsController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('모든 필드를 입력해주세요.')),
+      );
+      return;
+    }
+
+    String imageUrl =
+        "https://drive.google.com/uc?export=view&id=1vJSI4WdkQqrl4NprLxVLT5FAecKW9HyC";
 
     if (_imageFile != null) {
       try {
@@ -136,7 +164,32 @@ class _AddFriendsState extends State<AddFriends> {
               SizedBox(height: height * 0.05),
               _buildTextField("Enter friend Username", _nameController),
               const SizedBox(height: 16),
-              _buildTextField("Enter Your Friend birthday", _birthdayController),
+              GestureDetector(
+                onTap: () => _selectBirthday(context),
+                child: AbsorbPointer(
+                  child: TextField(
+                    controller: _birthdayController,
+                    decoration: InputDecoration(
+                      hintText: "Select friend's birthday",
+                      suffixIcon: const Icon(Icons.calendar_today),
+                      hintStyle: TextStyle(color: Colors.black.withOpacity(0.6)),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Colors.grey.withOpacity(0.5)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Color(0xFF0D63D1)),
+                      ),
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                    readOnly: true,
+                  ),
+                ),
+              ),
               const SizedBox(height: 16),
               _buildTextField("Enter friend SNS account", _snsController),
               const SizedBox(height: 32),
