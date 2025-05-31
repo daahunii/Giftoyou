@@ -82,6 +82,7 @@ class FriendsListPage extends StatelessWidget {
                               builder: (context) => SearchGiftPage(
                                 friendName: friend.name,
                                 avatarPath: friend.photoUrl,
+                                snsAccount: friend.sns,
                               ),
                             ),
                           );

@@ -1,15 +1,19 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:http/http.dart' as http;
 
 class SearchGiftPage extends StatefulWidget {
   final String friendName;
   final String avatarPath;
+  final String snsAccount;
 
   const SearchGiftPage({
     super.key,
     required this.friendName,
     required this.avatarPath,
+    required this.snsAccount,
   });
 
   @override
@@ -25,18 +29,12 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
   late final Animation<Alignment> _endAlignAnim;
 
   String? _downloadedAvatarUrl;
+  List<String> _fetchedImages = [];
+  List<String> _imageLabels = [];
 
   @override
   void initState() {
     super.initState();
-
-    Future.delayed(const Duration(seconds: 5), () {
-      setState(() {
-        _isLoading = false;
-        _waveController.stop();
-        _dotController.stop();
-      });
-    });
 
     _waveController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat();
     _dotController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000))..repeat();
@@ -53,6 +51,7 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
     ).animate(CurvedAnimation(parent: _bgController, curve: Curves.easeInOut));
 
     _loadAvatarImage();
+    _fetchInstagramImages();
   }
 
   Future<void> _loadAvatarImage() async {
@@ -64,6 +63,90 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
       });
     } catch (e) {
       print("이미지 다운로드 실패: $e");
+    }
+  }
+
+  Future<void> _fetchInstagramImages() async {
+    try {
+      final uri = Uri.parse('http://127.0.0.1:8080/crawl?username=${widget.snsAccount}');
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final message = data['message'];
+        print('🔥 서버 메시지: $message');
+        setState(() {
+          _fetchedImages = List<String>.from(data['images']);
+        });
+
+        await _labelStoredImagesInFirebase();
+
+        setState(() {
+          _isLoading = false;
+          _waveController.stop();
+          _dotController.stop();
+        });
+      } else {
+        throw Exception('API 호출 오류: \${response.statusCode}');
+      }
+    } catch (e) {
+      print('API 요청 실패: $e');
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("서버 연결 실패"),
+            content: const Text("이미지를 불러오는 중 문제가 발생했습니다.\n잠시 후 다시 시도해주세요."),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                },
+                child: const Text("확인"),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _labelStoredImagesInFirebase() async {
+    try {
+      final result = await FirebaseStorage.instance
+          .ref('images/${widget.snsAccount}/')
+          .listAll();
+
+      final imageUrls = await Future.wait(
+        result.items.map((ref) => ref.getDownloadURL()),
+      );
+
+      final labels = await _getLabelsFromVision(imageUrls);
+
+      setState(() {
+        _imageLabels = labels.toSet().toList();
+      });
+
+      print("✅ 최종 라벨링 결과: $_imageLabels");
+    } catch (e) {
+      print("❌ Firebase 라벨링 실패: $e");
+    }
+  }
+
+  Future<List<String>> _getLabelsFromVision(List<String> urls) async {
+    final response = await http.post(
+      Uri.parse("https://labelimage-thugnd6r5a-uc.a.run.app"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"images": urls}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return List<String>.from(data["labels"]);
+    } else {
+      throw Exception("라벨링 실패: ${response.statusCode}");
     }
   }
 
@@ -158,9 +241,6 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
               ),
             ),
           ),
-          const SizedBox(height: 10),
-          if (_isLoading)
-            const Text('11 mins ago', style: TextStyle(color: Colors.grey)),
           const SizedBox(height: 40),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 500),
@@ -213,6 +293,8 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
                         arguments: {
                           'friendName': widget.friendName,
                           'avatarPath': widget.avatarPath,
+                          'images': _fetchedImages,
+                          'labels': _imageLabels,
                         },
                       );
                     },

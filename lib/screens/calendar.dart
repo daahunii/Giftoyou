@@ -79,7 +79,8 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
       if (birthdayStr is String) {
         final parsed = DateTime.tryParse(birthdayStr);
         if (parsed != null) {
-          final birthday = DateTime.utc(_focusedDay.year, parsed.month, parsed.day);
+          final today = DateTime.now();
+          final birthday = DateTime.utc(today.year, parsed.month, parsed.day);
           final label = "$name 생일 🎂";
           loadedEvents[birthday] = [...?loadedEvents[birthday], label];
         }
