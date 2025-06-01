@@ -116,8 +116,8 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
   Future<void> _labelStoredImagesInFirebase() async {
     try {
       final result = await FirebaseStorage.instance
-          .ref('images/${widget.snsAccount}/')
-          .listAll();
+        .ref('insta_images/${widget.snsAccount}/')
+        .listAll();
 
       final imageUrls = await Future.wait(
         result.items.map((ref) => ref.getDownloadURL()),
@@ -135,18 +135,29 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
     }
   }
 
+  /// Vision API를 호출하여 이미지 라벨링을 수행합니다.
   Future<List<String>> _getLabelsFromVision(List<String> urls) async {
-    final response = await http.post(
-      Uri.parse("https://labelimage-thugnd6r5a-uc.a.run.app"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"images": urls}),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse("https://labelimage-thugnd6r5a-uc.a.run.app"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"imageUrls": urls}),  // ✅ 필드명 확인
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return List<String>.from(data["labels"]);
-    } else {
-      throw Exception("라벨링 실패: ${response.statusCode}");
+      print("📤 요청된 URL 수: ${urls.length}");
+      print("📤 요청 바디: ${jsonEncode({"imageUrls": urls})}");
+      print("📥 응답 상태코드: ${response.statusCode}");
+      print("📥 응답 바디: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return List<String>.from(data["labels"]);
+      } else {
+        throw Exception("라벨링 실패: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("❌ Vision API 요청 중 예외 발생: $e");
+      rethrow;
     }
   }
 

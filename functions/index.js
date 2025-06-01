@@ -3,43 +3,53 @@ const vision = require("@google-cloud/vision");
 const cors = require("cors")({ origin: true });
 const express = require("express");
 const axios = require("axios");
+const path = require("path");
 
 const app = express();
 app.use(cors);
 app.use(express.json());
 
-// Google Vision 클라이언트 초기화
-const client = new vision.ImageAnnotatorClient();
+// ✅ Vision API 클라이언트 초기화
+const client = new vision.ImageAnnotatorClient({
+  keyFilename: path.join(__dirname, "giftoyou-ad070-391002e66d07.json"),
+});
 
-// POST /label-image
-app.post("/label-image", async (req, res) => {
+// ✅ 라벨링: 루트 경로에서 직접 처리
+app.post("/", async (req, res) => {
   try {
-    const imageUrl = req.body.imageUrl;
-    if (!imageUrl) return res.status(400).send("Missing imageUrl");
+    const imageUrls = req.body.imageUrls;
+    if (!Array.isArray(imageUrls) || imageUrls.length === 0) {
+      return res.status(400).send("Missing or invalid imageUrls");
+    }
 
-    // ✅ 이미지 다운로드
-    const imageResponse = await axios.get(imageUrl, {
-      responseType: "arraybuffer",
-    });
+    const allLabels = new Set();
 
-    const imageBuffer = Buffer.from(imageResponse.data, "binary");
+    for (const imageUrl of imageUrls) {
+      const imageResponse = await axios.get(imageUrl, {
+        responseType: "arraybuffer",
+      });
 
-    // ✅ Vision API 호출 - base64 인코딩 후 content로 전달
-    const [result] = await client.labelDetection({
-      image: {
-        content: imageBuffer.toString("base64"),
-      },
-    });
+      const imageBuffer = Buffer.from(imageResponse.data, "binary");
 
-    const labels = result.labelAnnotations.map(label => label.description);
-    console.log("🎯 라벨링 결과:", labels);
+      const [result] = await client.labelDetection({
+        image: {
+          content: imageBuffer.toString("base64"),
+        },
+      });
 
-    res.status(200).json({ labels });
+      const labels = result.labelAnnotations?.map(label => label.description) || [];
+      labels.forEach(label => allLabels.add(label));
+    }
+
+    const uniqueLabels = Array.from(allLabels);
+    console.log("🎯 전체 라벨링 결과:", uniqueLabels);
+
+    res.status(200).json({ labels: uniqueLabels });
   } catch (error) {
     console.error("🔥 라벨링 실패:", error);
     res.status(500).send("Vision API Error");
   }
 });
 
-// Cloud Function으로 export
+// ✅ Cloud Function export
 exports.labelImage = functions.https.onRequest(app);
