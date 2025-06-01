@@ -32,7 +32,14 @@ class GiftoYouApp extends StatelessWidget {
         '/': (context) => const Splash(),
         '/home': (context) => Home(),
         '/login': (context) => const Login(),
-        '/recommendList': (context) => const RecommendListPage(),
+        '/recommendList': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return RecommendListPage(
+            friendName: args['friendName'],
+            avatarPath: args['avatarPath'],
+            naverResults: args['naverResults'],
+          );
+        },
       },
     );
   }

@@ -175,7 +175,7 @@ Map<String, dynamic> _naverResults = {}; // 네이버 쇼핑 결과 저장용
       final apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey';
 
       final prompt = '''
-  다음 키워드를 가진 친구에게 어울릴 만한 선물 10가지를 추천해줘. 그리고 추천 목록은 번호별로 나눠서 키워드만 적어줘.
+  다음 키워드를 가진 친구에게 어울릴 만한 선물 10가지를 추천해줘. 그리고 추천 목록은 번호별로 나눠서 키워드만 적어줘. 추가로 선물은 한국어로 반영해서 작성하도록.
 
   키워드:
   ${_imageLabels.join(', ')}
@@ -214,10 +214,10 @@ Map<String, dynamic> _naverResults = {}; // 네이버 쇼핑 결과 저장용
           print("👉 $rec");
         }
 
-        final naverResults = await _fetchNaverShoppingResults(recommendations);
+        _naverResults = await _fetchNaverShoppingResults(recommendations);
         print("🛍️ 네이버 쇼핑 결과:");
         // print(naverResults);
-        final result = naverResults;
+        final result = _naverResults;
         result.forEach((key, value) {
           print("📦 품목: $key");
           for (var item in value) {
