@@ -126,16 +126,20 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
       final labels = await _getLabelsFromVision(imageUrls);
 
       setState(() {
-        _imageLabels = labels.toSet().toList();
+        _imageLabels = labels.whereType<String>().toSet().toList();
       });
 
       print("✅ 최종 라벨링 결과: $_imageLabels");
+      print("\n\n");
+      print("🚀 Gemini API 호출 시작");
+      await _getGiftRecommendations(); // Gemini API 호출
+
     } catch (e) {
       print("❌ Firebase 라벨링 실패: $e");
     }
   }
 
-  /// Vision API를 호출하여 이미지 라벨링을 수행합니다.
+  // Vision API를 호출하여 이미지 라벨링을 수행합니다.
   Future<List<String>> _getLabelsFromVision(List<String> urls) async {
     try {
       final response = await http.post(
@@ -148,6 +152,7 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
       print("📤 요청 바디: ${jsonEncode({"imageUrls": urls})}");
       print("📥 응답 상태코드: ${response.statusCode}");
       print("📥 응답 바디: ${response.body}");
+      print("\n\n");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -160,6 +165,92 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
       rethrow;
     }
   }
+
+Map<String, dynamic> _naverResults = {}; // 네이버 쇼핑 결과 저장용
+
+  // Gemini API를 호출하여 친구에게 어울릴 만한 선물 추천을 받습니다.
+  Future<void> _getGiftRecommendations() async {
+    try {
+      const apiKey = 'AIzaSyBWtiy-F2NqgQFRCxBnkfQhYrV4rfJdG18';
+      final apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey';
+
+      final prompt = '''
+  다음 키워드를 가진 친구에게 어울릴 만한 선물 10가지를 추천해줘. 그리고 추천 목록은 번호별로 나눠서 키워드만 적어줘.
+
+  키워드:
+  ${_imageLabels.join(', ')}
+  ''';
+
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "contents": [
+            {
+              "role": "user",
+              "parts": [{"text": prompt}]
+            }
+          ],
+          "generationConfig": {
+            "temperature": 0.7,
+            "topK": 64,
+            "topP": 0.95,
+            "maxOutputTokens": 1024,
+            "responseMimeType": "text/plain"
+          }
+        }),
+      );
+
+      print("📡 Gemini 응답 코드: ${response.statusCode}");
+      print("📡 Gemini 응답 바디: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final content = data['candidates'][0]['content']['parts'][0]['text'] as String;
+        final recommendations = content.split('\n').map((e) => e.toString()).where((String e) => e.trim().isNotEmpty).toList();
+
+        print("🎁 Gemini 추천 결과:");
+        for (var rec in recommendations) {
+          print("👉 $rec");
+        }
+
+        final naverResults = await _fetchNaverShoppingResults(recommendations);
+        print("🛍️ 네이버 쇼핑 결과:");
+        // print(naverResults);
+        final result = naverResults;
+        result.forEach((key, value) {
+          print("📦 품목: $key");
+          for (var item in value) {
+            print("🛒 상품: ${item['title']}");
+            print("💰 가격: ${item['lprice']}원");
+            print("🔗 링크: ${item['link']}");
+            print("🖼 이미지: ${item['image']}\n");
+          }
+        });
+        
+      } else {
+        print("❌ Gemini API 호출 실패: ${response.statusCode}, ${response.body}");
+      }
+    } catch (e) {
+      print("❗ Gemini 호출 중 예외 발생: $e");
+    }
+  }
+
+  Future<Map<String, dynamic>> _fetchNaverShoppingResults(List<String> keywords) async {
+    final url = Uri.parse('http://127.0.0.1:8081/recommend');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'keywords': keywords}),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("네이버 쇼핑 API 호출 실패: ${response.statusCode}");
+    }
+  }
+
 
   @override
   void dispose() {
@@ -306,6 +397,7 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
                           'avatarPath': widget.avatarPath,
                           'images': _fetchedImages,
                           'labels': _imageLabels,
+                          'naverResults': _naverResults,
                         },
                       );
                     },
