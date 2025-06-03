@@ -1,5 +1,11 @@
 # 🎁 Giftoyou - 소셜미디어 기반 AI 선물 추천 앱
 
+<img src="https://github.com/user-attachments/assets/ccb01c4f-83f7-40d8-b147-e6295430225a" width=200 height=430> &nbsp;
+<img src="https://github.com/user-attachments/assets/dc8d7e8e-67a9-4140-8144-9a26f52c672d" width=200 height=430> &nbsp;
+<img src="https://github.com/user-attachments/assets/4e11279a-ba56-4589-aff9-be03f3bf3ab8" width=200 height=430> &nbsp;
+<img src="https://github.com/user-attachments/assets/9ff246f3-e2c1-4c68-8b6a-da9c9143edc3" width=200 height=430> &nbsp;
+<!-- <img src="https://github.com/user-attachments/assets/302beb10-670e-48d9-a71e-a09bc29f58fb" width=200 height=430> -->
+
 **Giftoyou**는 친구의 소셜미디어 데이터를 분석해 AI가 맞춤형 선물을 추천해주는 감성 기반 선물 추천 서비스입니다.  
 소셜미디어 활동을 기반으로 친구의 관심사를 파악하고, 온라인 쇼핑 연동까지 가능한 스마트한 선물 큐레이션 앱입니다.
 
