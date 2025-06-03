@@ -91,6 +91,10 @@ class _RecommendListPageState extends State<RecommendListPage> {
               ),
               itemBuilder: (context, index) {
                 final item = items[index];
+                final image = item['image'] ?? '';
+                final title = (item['title'] ?? '').replaceAll(RegExp(r'<[^>]*>'), '');
+                final mallName = item['mallName'] ?? '알 수 없음';
+                final lprice = item['lprice'] ?? '0';
                 final quantity = cart[index] ?? 0;
 
                 return Container(
@@ -111,22 +115,29 @@ class _RecommendListPageState extends State<RecommendListPage> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(12),
                           child: Image.network(
-                            item['image'],
+                            image,
                             fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
                           ),
                         ),
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        item['title'].replaceAll(RegExp(r'<[^>]*>'), ''),
+                        title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
-                      Text(item['mallName'], style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                      Text(
+                        mallName,
+                        style: const TextStyle(fontSize: 10, color: Colors.grey),
+                      ),
                       const SizedBox(height: 4),
-                      Text("${formatCurrency(item['lprice'])}원", style: const TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 24, 67, 175))),
+                      Text(
+                        "${formatCurrency(lprice)}원",
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 24, 67, 175)),
+                      ),
                       const SizedBox(height: 9),
                       Align(
                         alignment: Alignment.center,

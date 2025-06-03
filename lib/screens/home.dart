@@ -6,6 +6,7 @@ import 'profile.dart';
 import 'notification.dart';
 import 'calendar.dart';
 import 'friendsList.dart';
+import 'dailyGift.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -121,7 +122,7 @@ class HomeContent extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 24),
-                _buildDailyGiftCard(width),
+                _buildDailyGiftCard(context, width),
                 const SizedBox(height: 24),
                 const Text(
                   "Recommended for you",
@@ -202,31 +203,38 @@ class HomeContent extends StatelessWidget {
     );
   }
 
-  Widget _buildDailyGiftCard(double width) {
-    return Container(
-      width: width,
-      height: 100,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF333242),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text("Daily Gift Recommend", style: TextStyle(color: Colors.white, fontSize: 18)),
-              SizedBox(height: 6),
-              Text("MEDITATION • 3-10 MIN", style: TextStyle(color: Color(0xFFEBEAEC), fontSize: 11)),
-            ],
-          ),
-          const Spacer(),
-          const CircleAvatar(
-            backgroundColor: Colors.white,
-            child: Icon(Icons.chevron_right, color: Colors.black),
-          ),
-        ],
+  Widget _buildDailyGiftCard(BuildContext context, double width) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const DailyGiftPage()),
+        );
+      },
+      child: Container(
+        width: width,
+        height: 100,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF333242),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text("Daily Gift Recommend", style: TextStyle(color: Colors.white, fontSize: 18)),
+                SizedBox(height: 6),
+                Text("오늘의 특별한 선물을 추천드려요!", style: TextStyle(color: Color(0xFFEBEAEC), fontSize: 11)),
+              ],
+            ),
+            const Spacer(),
+            const CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Icon(Icons.chevron_right, color: Colors.black),
+            ),
+          ],
+        ),
       ),
     );
   }

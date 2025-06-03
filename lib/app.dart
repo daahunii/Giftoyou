@@ -15,29 +15,29 @@ class GiftoYouApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        fontFamily: 'Pretendard', // 원하는 폰트로 설정
+        fontFamily: 'Pretendard',
       ),
-      // ✅ 지역화 지원 추가
+      locale: const Locale('ko', 'KR'), // ← 명시적 locale 설정 (중요)
+      supportedLocales: const [
+        Locale('ko', 'KR'),
+        Locale('en', 'US'),
+      ],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('ko', 'KR'),
-        Locale('en', 'US'),
-      ],
       initialRoute: '/',
       routes: {
         '/': (context) => const Splash(),
-        '/home': (context) => Home(),
+        '/home': (context) => const Home(),
         '/login': (context) => const Login(),
         '/recommendList': (context) {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
           return RecommendListPage(
-            friendName: args['friendName'],
-            avatarPath: args['avatarPath'],
-            naverResults: args['naverResults'],
+            friendName: args['friendName'] ?? '',
+            avatarPath: args['avatarPath'] ?? '',
+            naverResults: args['naverResults'] ?? {},
           );
         },
       },
