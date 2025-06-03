@@ -4,6 +4,8 @@ import 'screens/splash.dart';
 import 'screens/home.dart';
 import 'screens/login.dart';
 import 'screens/recommendList.dart';
+import 'screens/calendar.dart';
+import 'screens/friendsList.dart';
 
 class GiftoYouApp extends StatelessWidget {
   const GiftoYouApp({super.key});
@@ -32,6 +34,8 @@ class GiftoYouApp extends StatelessWidget {
         '/': (context) => const Splash(),
         '/home': (context) => const Home(),
         '/login': (context) => const Login(),
+        '/calendar': (context) => const CalendarPage(),
+        '/friendsList': (context) => const FriendsListPage(),
         '/recommendList': (context) {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
           return RecommendListPage(
