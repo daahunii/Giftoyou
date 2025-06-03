@@ -6,6 +6,7 @@ import 'screens/login.dart';
 import 'screens/recommendList.dart';
 import 'screens/calendar.dart';
 import 'screens/friendsList.dart';
+import 'screens/searchResult.dart';
 
 class GiftoYouApp extends StatelessWidget {
   const GiftoYouApp({super.key});
@@ -36,6 +37,10 @@ class GiftoYouApp extends StatelessWidget {
         '/login': (context) => const Login(),
         '/calendar': (context) => const CalendarPage(),
         '/friendsList': (context) => const FriendsListPage(),
+        '/searchResult': (context) {
+          final keyword = ModalRoute.of(context)!.settings.arguments as String;
+          return SearchResultPage(keyword: keyword);
+        },
         '/recommendList': (context) {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
           return RecommendListPage(
