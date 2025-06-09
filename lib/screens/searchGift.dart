@@ -31,6 +31,7 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
   String? _downloadedAvatarUrl;
   List<String> _fetchedImages = [];
   List<String> _imageLabels = [];
+  Map<String, dynamic> _naverResults = {}; // 네이버 쇼핑 결과 저장용
 
   @override
   void initState() {
@@ -132,20 +133,19 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
       print("✅ 최종 라벨링 결과: $_imageLabels");
       print("\n\n");
       print("🚀 Gemini API 호출 시작");
-      await _getGiftRecommendations(); // Gemini API 호출
+      await _getGiftRecommendations();
 
     } catch (e) {
       print("❌ Firebase 라벨링 실패: $e");
     }
   }
 
-  // Vision API를 호출하여 이미지 라벨링을 수행합니다.
   Future<List<String>> _getLabelsFromVision(List<String> urls) async {
     try {
       final response = await http.post(
         Uri.parse("https://labelimage-thugnd6r5a-uc.a.run.app"),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"imageUrls": urls}),  // ✅ 필드명 확인
+        body: jsonEncode({"imageUrls": urls}),
       );
 
       print("📤 요청된 URL 수: ${urls.length}");
@@ -166,9 +166,6 @@ class _SearchGiftPageState extends State<SearchGiftPage> with TickerProviderStat
     }
   }
 
-Map<String, dynamic> _naverResults = {}; // 네이버 쇼핑 결과 저장용
-
-  // Gemini API를 호출하여 친구에게 어울릴 만한 선물 추천을 받습니다.
   Future<void> _getGiftRecommendations() async {
     try {
       const apiKey = 'AIzaSyBWtiy-F2NqgQFRCxBnkfQhYrV4rfJdG18';
@@ -216,9 +213,7 @@ Map<String, dynamic> _naverResults = {}; // 네이버 쇼핑 결과 저장용
 
         _naverResults = await _fetchNaverShoppingResults(recommendations);
         print("🛍️ 네이버 쇼핑 결과:");
-        // print(naverResults);
-        final result = _naverResults;
-        result.forEach((key, value) {
+        _naverResults.forEach((key, value) {
           print("📦 품목: $key");
           for (var item in value) {
             print("🛒 상품: ${item['title']}");
@@ -227,7 +222,7 @@ Map<String, dynamic> _naverResults = {}; // 네이버 쇼핑 결과 저장용
             print("🖼 이미지: ${item['image']}\n");
           }
         });
-        
+
       } else {
         print("❌ Gemini API 호출 실패: ${response.statusCode}, ${response.body}");
       }
@@ -250,7 +245,6 @@ Map<String, dynamic> _naverResults = {}; // 네이버 쇼핑 결과 저장용
       throw Exception("네이버 쇼핑 API 호출 실패: ${response.statusCode}");
     }
   }
-
 
   @override
   void dispose() {
@@ -361,11 +355,14 @@ Map<String, dynamic> _naverResults = {}; // 네이버 쇼핑 결과 저장용
                 alignment: Alignment.center,
                 children: [
                   if (_isLoading) _buildWaveBackground(),
-                  CircleAvatar(
-                    backgroundImage: _downloadedAvatarUrl != null
-                        ? NetworkImage(_downloadedAvatarUrl!)
-                        : const AssetImage('assets/gift_close.png') as ImageProvider,
-                    radius: 80,
+                  Hero(
+                    tag: 'profile_${widget.friendName}',
+                    child: CircleAvatar(
+                      backgroundImage: _downloadedAvatarUrl != null
+                          ? NetworkImage(_downloadedAvatarUrl!)
+                          : const AssetImage('assets/gift_close.png') as ImageProvider,
+                      radius: 80,
+                    ),
                   ),
                 ],
               ),

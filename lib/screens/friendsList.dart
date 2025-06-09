@@ -111,9 +111,12 @@ class _FriendsListPageState extends State<FriendsListPage> {
                         },
                         child: Column(
                           children: [
-                            CircleAvatar(
-                              radius: 40,
-                              backgroundImage: NetworkImage(friend.photoUrl),
+                            Hero(
+                              tag: 'profile_${friend.name}',
+                              child: CircleAvatar(
+                                radius: 40,
+                                backgroundImage: NetworkImage(friend.photoUrl),
+                              ),
                             ),
                             const SizedBox(height: 6),
                             Text(
