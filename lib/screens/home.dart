@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'addfriends.dart';
 import 'gift.dart';
 import 'profile.dart';
@@ -56,8 +58,90 @@ class _HomeState extends State<Home> {
   }
 }
 
-class HomeContent extends StatelessWidget {
+class HomeContent extends StatefulWidget {
   const HomeContent({super.key});
+
+  @override
+  State<HomeContent> createState() => _HomeContentState();
+}
+
+class _HomeContentState extends State<HomeContent> {
+  List<Map<String, dynamic>> _recommendedItems = [];
+  bool _loadingRecommendations = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRecommendedItems();
+  }
+
+  Future<List<String>> fetchGeminiRecommendations() async {
+    const apiKey = 'AIzaSyBWtiy-F2NqgQFRCxBnkfQhYrV4rfJdG18';
+    final url =
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey';
+
+    final prompt = "지금 시점 기준 네이버 쇼핑에서 인기 있는 선물 아이템 5개 키워드를 추천해줘. 한 줄에 하나씩 출력해줘.";
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        "contents": [
+          {
+            "role": "user",
+            "parts": [{"text": prompt}]
+          }
+        ]
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final text = data['candidates'][0]['content']['parts'][0]['text'] as String;
+      return text
+          .split('\n')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+    } else {
+      print("Gemini error: ${response.statusCode}");
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> searchNaverShopping(String keyword) async {
+    final response = await http.get(Uri.parse("http://127.0.0.1:8081/search?query=$keyword"));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((item) => Map<String, dynamic>.from(item)).toList();
+    } else {
+      print("Naver API error: ${response.statusCode}");
+      return [];
+    }
+  }
+
+  Future<void> _fetchRecommendedItems() async {
+    try {
+      final keywords = await fetchGeminiRecommendations();
+      final List<Map<String, dynamic>> items = [];
+
+      for (final keyword in keywords) {
+        final results = await searchNaverShopping(keyword);
+        if (results.isNotEmpty) {
+          items.add(results.first);
+        }
+      }
+
+      setState(() {
+        _recommendedItems = items;
+        _loadingRecommendations = false;
+      });
+    } catch (e) {
+      print('❌ 추천 상품 불러오기 오류: $e');
+      setState(() => _loadingRecommendations = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +169,7 @@ class HomeContent extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  "We Wish you have a good day",
+                  "당신의 소중한 사람들을 위해 선물 해보세요!",
                   style: TextStyle(
                     fontSize: 16,
                     color: Color(0xFFA0A3B2),
@@ -125,7 +209,7 @@ class HomeContent extends StatelessWidget {
                 _buildDailyGiftCard(context, width),
                 const SizedBox(height: 24),
                 const Text(
-                  "Recommended for you",
+                  "인기 상품 추천 리스트",
                   style: TextStyle(
                     fontSize: 22,
                     color: Color(0xFF3F414E),
@@ -133,7 +217,7 @@ class HomeContent extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildRecommendationList()
+                _buildRecommendationList(),
               ],
             ),
           ),
@@ -240,43 +324,44 @@ class HomeContent extends StatelessWidget {
   }
 
   Widget _buildRecommendationList() {
+    if (_loadingRecommendations) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: [
-          _buildRecommendationCard("assets/watermelon.png", "Focus"),
-          const SizedBox(width: 12),
-          _buildRecommendationCard("assets/pear.png", "Happiness"),
-          const SizedBox(width: 12),
-          _buildRecommendationCard("assets/apple.png", "Calm"),
-        ],
-      ),
-    );
-  }
+        children: _recommendedItems.map((item) {
+          final image = item['image'] ?? '';
+          final title = (item['title'] ?? '').replaceAll(RegExp(r'<[^>]*>'), '');
 
-  Widget _buildRecommendationCard(String imagePath, String title) {
-    return Container(
-      width: 160,
-      margin: const EdgeInsets.only(bottom: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.asset(imagePath, height: 120, fit: BoxFit.cover),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Color(0xFF3F414E),
-              fontWeight: FontWeight.bold,
+          return Container(
+            width: 150,
+            margin: const EdgeInsets.only(right: 12, bottom: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.network(image, height: 120, fit: BoxFit.cover),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF3F414E),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(item['mallName'] ?? '', style: const TextStyle(color: Color(0xFFA1A4B2), fontSize: 11)),
+              ],
             ),
-          ),
-          const SizedBox(height: 2),
-          const Text("MEDITATION • 3-10 MIN", style: TextStyle(color: Color(0xFFA1A4B2), fontSize: 11)),
-        ],
+          );
+        }).toList(),
       ),
     );
   }
