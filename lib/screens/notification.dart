@@ -1,7 +1,51 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class NotificationPage extends StatelessWidget {
+class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
+
+  @override
+  State<NotificationPage> createState() => _NotificationPageState();
+}
+
+class _NotificationPageState extends State<NotificationPage> {
+  final currentUser = FirebaseAuth.instance.currentUser;
+  List<Map<String, dynamic>> friendNotifications = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchFriendNotifications();
+  }
+
+  Future<void> fetchFriendNotifications() async {
+    if (currentUser == null) return;
+
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser!.uid)
+          .collection('friends')
+          .orderBy('addedAt', descending: true)
+          .get();
+
+      final List<Map<String, dynamic>> notis = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'name': data['name'] ?? 'Unknown',
+          'profileImage': data['photoURL'] ?? 'assets/gift_close.png',
+          'time': data['addedAt']?.toDate(),
+        };
+      }).toList();
+
+      setState(() {
+        friendNotifications = notis;
+      });
+    } catch (e) {
+      print("❌ 알림 로드 실패: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,53 +78,29 @@ class NotificationPage extends StatelessWidget {
               Expanded(
                 child: ListView(
                   children: [
+                    ...friendNotifications.map((noti) {
+                      final date = noti['time'] as DateTime?;
+                      final timeText = date != null
+                          ? '${date.month}/${date.day} ${date.hour}:${date.minute.toString().padLeft(2, '0')}'
+                          : '';
+
+                      return _buildNotificationItem(
+                        avatar: noti['profileImage'],
+                        name: noti['name'],
+                        time: timeText,
+                        message: '${noti['name']} 친구가 추가되었습니다!',
+                      );
+                    }).toList(),
+
                     _buildNotificationItem(
-                      avatar: 'assets/avatar1.png',
-                      name: 'starryskies23',
-                      time: '1d',
-                      message: 'Started following you',
-                      trailing: _buildFollowButton(),
-                    ),
-                    _buildNotificationItem(
-                      avatar: 'assets/avatar2.png',
-                      name: 'nebulanomad',
-                      time: '1d',
-                      message: 'nebula님께 선물 발송완료!',
-                      trailing: _buildThumbnail(),
-                    ),
-                    _buildNotificationItem(
-                      avatar: 'assets/gift_icon.png',
+                      avatar: 'assets/gift_close.png',
                       name: 'Giftoyou',
-                      time: '2d',
+                      time: '오늘',
                       message: '오늘의 선물 추천이 올라왔어요!',
-                    ),
-                    _buildNotificationItem(
-                      avatar: 'assets/avatar3.png',
-                      name: 'lunavoyager',
-                      time: '3d',
-                      message: 'Saved your post',
-                      trailing: _buildThumbnail(),
-                    ),
-                    _buildNotificationItem(
-                      avatar: 'assets/avatar4.png',
-                      name: 'shadowlynx',
-                      time: '4d',
-                      message: 'Commented on your post',
-                      subText: 
-                          "i’m going in september. what about you?",
-                      trailing: _buildThumbnail(),
-                    ),
-                    _buildNotificationItem(
-                      avatar: 'assets/avatar3.png',
-                      name: 'lunavoyager',
-                      time: '5d',
-                      message: 'Liked your comment',
-                      subText: 'This is so adorable!!!',
-                      trailing: _buildThumbnail(),
                     ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -113,6 +133,8 @@ class NotificationPage extends StatelessWidget {
     String? subText,
     Widget? trailing,
   }) {
+    final bool isNetwork = avatar.startsWith('http');
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
@@ -122,7 +144,9 @@ class NotificationPage extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 24,
-                backgroundImage: AssetImage(avatar),
+                backgroundImage: isNetwork
+                    ? NetworkImage(avatar)
+                    : AssetImage(avatar) as ImageProvider,
               ),
               Positioned(
                 top: 0,
@@ -130,7 +154,7 @@ class NotificationPage extends StatelessWidget {
                 child: Container(
                   width: 8,
                   height: 8,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: Colors.red,
                     shape: BoxShape.circle,
                   ),
@@ -173,34 +197,6 @@ class NotificationPage extends StatelessWidget {
             trailing,
           ],
         ],
-      ),
-    );
-  }
-
-  Widget _buildFollowButton() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0D63D1),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: const Text(
-        '친구추가',
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  Widget _buildThumbnail() {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        image: const DecorationImage(
-          image: AssetImage('assets/thumb_sample.png'),
-          fit: BoxFit.cover,
-        ),
       ),
     );
   }
