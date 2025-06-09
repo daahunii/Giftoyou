@@ -7,7 +7,7 @@ import 'screens/recommendList.dart';
 import 'screens/calendar.dart';
 import 'screens/friendsList.dart';
 import 'screens/searchResult.dart';
-
+import 'screens/categories.dart';
 class GiftoYouApp extends StatelessWidget {
   const GiftoYouApp({super.key});
 
@@ -49,6 +49,7 @@ class GiftoYouApp extends StatelessWidget {
             naverResults: args['naverResults'] ?? {},
           );
         },
+        '/categories': (context) => const CategoriesPage(),
       },
     );
   }

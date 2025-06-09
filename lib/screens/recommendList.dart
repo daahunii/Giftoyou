@@ -57,20 +57,45 @@ class _RecommendListPageState extends State<RecommendListPage> {
     if (user == null) return;
 
     final uid = user.uid;
-    final cartData = cart.entries.map((entry) {
+    final docRef = FirebaseFirestore.instance.collection('carts').doc(uid);
+    final doc = await docRef.get();
+
+    List<Map<String, dynamic>> existingItems = [];
+    if (doc.exists) {
+      final data = doc.data();
+      existingItems = List<Map<String, dynamic>>.from(data?['items'] ?? []);
+    }
+
+    // 현재 cart 데이터를 변환
+    final newItems = cart.entries.map((entry) {
       final item = items[entry.key];
       return {
-        'image': item['image'],
         'title': item['title'].replaceAll(RegExp(r'<[^>]*>'), ''),
+        'image': item['image'],
         'lprice': item['lprice'],
         'quantity': entry.value,
         'mallName': item['mallName'] ?? '알 수 없음',
       };
     }).toList();
 
-    await FirebaseFirestore.instance.collection('carts').doc(uid).set({
-      'items': cartData,
-    });
+    // 기존 항목과 병합
+    final mergedItems = <Map<String, dynamic>>[];
+
+    for (var newItem in newItems) {
+      final existingIndex = existingItems.indexWhere((item) =>
+          item['title'] == newItem['title'] &&
+          item['mallName'] == newItem['mallName']);
+
+      if (existingIndex != -1) {
+        // 동일한 상품이 이미 있으면 수량 합치기
+        existingItems[existingIndex]['quantity'] += newItem['quantity'];
+      } else {
+        existingItems.add(newItem);
+      }
+    }
+
+    // Firestore에 저장
+    await docRef.set({'items': existingItems});
   }
 
   @override

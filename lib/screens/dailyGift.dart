@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:giftoyou/screens/home.dart';
 
 class DailyGiftPage extends StatefulWidget {
@@ -113,6 +115,47 @@ class _DailyGiftPageState extends State<DailyGiftPage> {
     } catch (e) {
       print('❌ 오류 발생: $e');
     }
+  }
+
+  Future<void> saveCartToFirebase() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final uid = user.uid;
+    final docRef = FirebaseFirestore.instance.collection('carts').doc(uid);
+    final doc = await docRef.get();
+
+    List<Map<String, dynamic>> existingItems = [];
+    if (doc.exists) {
+      final data = doc.data();
+      existingItems = List<Map<String, dynamic>>.from(data?['items'] ?? []);
+    }
+
+    final newItems = cart.entries.map((entry) {
+      final item = items[entry.key];
+      return {
+        'title': item['title'].replaceAll(RegExp(r'<[^>]*>'), ''),
+        'image': item['image'],
+        'lprice': item['lprice'],
+        'quantity': entry.value,
+        'mallName': item['mallName'] ?? '알 수 없음',
+      };
+    }).toList();
+
+    for (var newItem in newItems) {
+      final existingIndex = existingItems.indexWhere((item) =>
+        item['title'] == newItem['title'] &&
+        item['mallName'] == newItem['mallName']
+      );
+
+      if (existingIndex != -1) {
+        existingItems[existingIndex]['quantity'] += newItem['quantity'];
+      } else {
+        existingItems.add(newItem);
+      }
+    }
+
+    await docRef.set({'items': existingItems});
   }
 
   @override
@@ -256,28 +299,37 @@ class _DailyGiftPageState extends State<DailyGiftPage> {
                 ),
                 if (cart.isNotEmpty)
                   Positioned(
-                    left: 16,
-                    right: 16,
-                    bottom: 32,
-                    child: Container(
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0D63D1),
-                        borderRadius: BorderRadius.circular(32),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '총 ${totalItemCount}개 | ${formatCurrencyInt(totalPrice)}원',
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                          const Text(
-                            'VIEW CART 🛍️',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                        ],
+                    left: 20,
+                    right: 20,
+                    bottom: 50,
+                    child: GestureDetector(
+                      onTap: () async {
+                        await saveCartToFirebase();
+                        setState(() => cart.clear());
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('장바구니에 상품들이 추가되었어요!')),
+                        );
+                      },
+                      child: Container(
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0D63D1),
+                          borderRadius: BorderRadius.circular(32),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '총 ${totalItemCount}개 | ${formatCurrencyInt(totalPrice)}원',
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            const Text(
+                              '장바구니 담기 🛍️',
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

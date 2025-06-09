@@ -243,17 +243,22 @@ class _GiftState extends State<Gift> {
                     const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text(
+                      children: [
+                        const Text(
                           'Categories',
                           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                         ),
-                        Text(
-                          'View all',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Color(0xFF0D63D1),
-                            fontWeight: FontWeight.w500,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, '/categories');
+                          },
+                          child: const Text(
+                            'View all',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Color(0xFF0D63D1),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                       ],

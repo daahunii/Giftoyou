@@ -4,19 +4,29 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:giftoyou/screens/home.dart';
 
-class SearchResultPage extends StatefulWidget {
-  final String keyword;
-  const SearchResultPage({super.key, required this.keyword});
+class CategoriesPage extends StatefulWidget {
+  const CategoriesPage({super.key});
 
   @override
-  State<SearchResultPage> createState() => _SearchResultPageState();
+  State<CategoriesPage> createState() => _CategoriesPageState();
 }
 
-class _SearchResultPageState extends State<SearchResultPage> {
+class _CategoriesPageState extends State<CategoriesPage> {
   bool _isLoading = true;
-  List<Map<String, dynamic>> _results = [];
+  Map<String, dynamic> _naverResults = {};
   final Map<int, int> cart = {};
+
+  String selectedCategory = 'All Categories';
+
+  final List<String> categories = [
+    'All Categories',
+    'Vegetables & Fruits',
+    'Fast foods',
+    'Dairy products',
+    'Home care',
+  ];
 
   String formatCurrency(String? price) {
     final formatter = NumberFormat('#,###');
@@ -36,7 +46,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
 
   int get totalPrice {
     int sum = 0;
-    _results.asMap().forEach((index, item) {
+    items.asMap().forEach((index, item) {
       if (cart.containsKey(index)) {
         try {
           sum += int.parse(item['lprice'] ?? '0') * cart[index]!;
@@ -46,39 +56,72 @@ class _SearchResultPageState extends State<SearchResultPage> {
     return sum;
   }
 
+  List<Map<String, dynamic>> get items {
+    return _naverResults.values.expand((e) => List<Map<String, dynamic>>.from(e)).toList();
+  }
+
   @override
   void initState() {
     super.initState();
-    _fetchSearchResults();
+    _fetchCategoryGifts();
   }
 
-  Future<void> _fetchSearchResults() async {
+  Future<void> _fetchCategoryGifts() async {
     try {
+      const apiKey = 'AIzaSyBWtiy-F2NqgQFRCxBnkfQhYrV4rfJdG18';
+      const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey';
+
+      final prompt = selectedCategory == 'All Categories'
+          ? '''
+        선물로 인기 있는 카테고리별 품목 20가지를 추천해줘. 한 줄 키워드 형태로 출력해줘.
+        예시:
+        1. 휴대용 가습기
+        2. 무선 이어폰
+        ...
+        '''
+          : '''
+        "$selectedCategory" 카테고리에서 선물로 인기 있는 품목 20가지를 추천해줘. 한 줄 키워드 형태로 출력해줘.
+        예시:
+        1. 휴대용 가습기
+        2. 무선 이어폰
+        ...
+        ''';
+
+      final geminiRes = await http.post(
+        Uri.parse(geminiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "contents": [
+            {
+              "role": "user",
+              "parts": [{"text": prompt}]
+            }
+          ]
+        }),
+      );
+
+      if (geminiRes.statusCode != 200) throw Exception('Gemini failed');
+
+      final data = jsonDecode(geminiRes.body);
+      final text = data['candidates'][0]['content']['parts'][0]['text'] as String;
+
+      final keywords = text
+          .split('\n')
+          .map((e) => e.replaceAll(RegExp(r'^\d+[.\)]?\s*'), '').trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+
       final naverRes = await http.post(
         Uri.parse('http://127.0.0.1:8081/recommend'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'keywords': [widget.keyword]}),
+        body: jsonEncode({'keywords': keywords}),
       );
 
       if (naverRes.statusCode != 200) throw Exception('Naver API failed');
 
-      final data = jsonDecode(naverRes.body) as Map<String, dynamic>;
-
-      final List<Map<String, dynamic>> parsed = [];
-
-      for (var value in data.values) {
-        if (value is List) {
-          for (var item in value) {
-            if (item is Map<String, dynamic>) {
-              parsed.add(item);
-            } else if (item is Map) {
-              parsed.add(Map<String, dynamic>.from(item));
-            }
-          }
-        }
-      }
+      if (!mounted) return;
       setState(() {
-        _results = parsed;
+        _naverResults = jsonDecode(naverRes.body);
         _isLoading = false;
       });
     } catch (e) {
@@ -100,9 +143,9 @@ class _SearchResultPageState extends State<SearchResultPage> {
       existingItems = List<Map<String, dynamic>>.from(data?['items'] ?? []);
     }
 
-    // 현재 cart에서 새로 담은 아이템 목록
+    // 현재 cart 데이터를 변환
     final newItems = cart.entries.map((entry) {
-      final item = _results[entry.key];
+      final item = items[entry.key];
       return {
         'title': item['title'].replaceAll(RegExp(r'<[^>]*>'), ''),
         'image': item['image'],
@@ -112,21 +155,23 @@ class _SearchResultPageState extends State<SearchResultPage> {
       };
     }).toList();
 
-    // 기존 아이템과 병합 (같은 title + mallName인 경우 수량 추가)
+    // 기존 항목과 병합
+    final mergedItems = <Map<String, dynamic>>[];
+
     for (var newItem in newItems) {
       final existingIndex = existingItems.indexWhere((item) =>
-        item['title'] == newItem['title'] &&
-        item['mallName'] == newItem['mallName']
-      );
+          item['title'] == newItem['title'] &&
+          item['mallName'] == newItem['mallName']);
 
       if (existingIndex != -1) {
+        // 동일한 상품이 이미 있으면 수량 합치기
         existingItems[existingIndex]['quantity'] += newItem['quantity'];
       } else {
         existingItems.add(newItem);
       }
     }
 
-    // 병합 결과 저장
+    // Firestore에 저장
     await docRef.set({'items': existingItems});
   }
 
@@ -136,16 +181,49 @@ class _SearchResultPageState extends State<SearchResultPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        centerTitle: true,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          '"${widget.keyword}" 검색 결과',
-          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        title: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: selectedCategory,
+            alignment: Alignment.center,
+            isDense: true,
+            style: const TextStyle(
+              color: Color(0xFF0D63D1),
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+            icon: const Padding(
+              padding: EdgeInsets.only(left: 2),
+              child: Icon(Icons.arrow_drop_down, color: Colors.grey),
+            ),
+            items: categories.map((String category) {
+              return DropdownMenuItem<String>(
+                value: category,
+                child: Text(category),
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              if (newValue != null) {
+                setState(() {
+                  selectedCategory = newValue;
+                  _isLoading = true;
+                  _fetchCategoryGifts();
+                });
+              }
+            },
+          ),
         ),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 16),
+            child: Icon(Icons.search, color: Colors.grey),
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -155,7 +233,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
                   padding: const EdgeInsets.only(bottom: 70),
                   child: GridView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    itemCount: _results.length,
+                    itemCount: items.length,
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       mainAxisSpacing: 14,
@@ -163,7 +241,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
                       childAspectRatio: 0.58,
                     ),
                     itemBuilder: (context, index) {
-                      final item = _results[index];
+                      final item = items[index];
                       final image = item['image'] ?? '';
                       final title = (item['title'] ?? '').replaceAll(RegExp(r'<[^>]*>'), '');
                       final mallName = item['mallName'] ?? '알 수 없음';
@@ -270,6 +348,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
                     right: 20,
                     bottom: 50,
                     child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () async {
                         await saveCartToFirebase();
                         setState(() => cart.clear());
