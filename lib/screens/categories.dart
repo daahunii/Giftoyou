@@ -63,7 +63,15 @@ class _CategoriesPageState extends State<CategoriesPage> {
   @override
   void initState() {
     super.initState();
-    _fetchCategoryGifts();
+    Future.delayed(Duration.zero, () {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args is String && categories.contains(args)) {
+        setState(() {
+          selectedCategory = args;
+        });
+      }
+      _fetchCategoryGifts();
+    });
   }
 
   Future<void> _fetchCategoryGifts() async {
@@ -80,7 +88,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
         ...
         '''
           : '''
-        "$selectedCategory" 카테고리에서 선물로 인기 있는 품목 20가지를 추천해줘. 한 줄 키워드 형태로 출력해줘.
+        "$selectedCategory" 카테고리에서 선물로 인기 있는 품목 15가지를 추천해줘. 한 줄 키워드 형태로 출력해줘. 그리고 만약에 패스트푸드가 카테고리라면, 1. 햄버거, 2. 피자 와 같이 포괄적으로 한줄씩 출력해줘.
         예시:
         1. 휴대용 가습기
         2. 무선 이어폰
@@ -143,7 +151,6 @@ class _CategoriesPageState extends State<CategoriesPage> {
       existingItems = List<Map<String, dynamic>>.from(data?['items'] ?? []);
     }
 
-    // 현재 cart 데이터를 변환
     final newItems = cart.entries.map((entry) {
       final item = items[entry.key];
       return {
@@ -155,23 +162,18 @@ class _CategoriesPageState extends State<CategoriesPage> {
       };
     }).toList();
 
-    // 기존 항목과 병합
-    final mergedItems = <Map<String, dynamic>>[];
-
     for (var newItem in newItems) {
       final existingIndex = existingItems.indexWhere((item) =>
           item['title'] == newItem['title'] &&
           item['mallName'] == newItem['mallName']);
 
       if (existingIndex != -1) {
-        // 동일한 상품이 이미 있으면 수량 합치기
         existingItems[existingIndex]['quantity'] += newItem['quantity'];
       } else {
         existingItems.add(newItem);
       }
     }
 
-    // Firestore에 저장
     await docRef.set({'items': existingItems});
   }
 

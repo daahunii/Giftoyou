@@ -72,40 +72,49 @@ class _GiftState extends State<Gift> {
           data['candidates'][0]['content']['parts'][0]['text'] as String;
       return text.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
     } else {
-      print("Gemini error: ${res.statusCode}");
+      print("Gemini error: \${res.statusCode}");
       return [];
     }
   }
 
   Widget _buildCategory(String title, String assetPath, Color bgColor, Color textColor) {
-    return SizedBox(
-      width: 160,
-      height: 160,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.asset(
-                  assetPath,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                ),
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          '/categories',
+          arguments: title,
+        );
+      },
+      child: SizedBox(
+        width: 160,
+        height: 160,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w500),
               ),
-            )
-          ],
+              const SizedBox(height: 8),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    assetPath,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                  ),
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );
