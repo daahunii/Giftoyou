@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
+import 'cart.dart'; // 🔹 장바구니 페이지 import
 
 class Gift extends StatefulWidget {
   const Gift({super.key});
@@ -120,214 +121,198 @@ class _GiftState extends State<Gift> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: GestureDetector(
-        onTap: () => _focusNode.unfocus(), // 🔹 포커스 해제
-        behavior: HitTestBehavior.translucent,
-            child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: width * 0.05),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Hi, $userName',
-                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400),
-                      ),
-                      Stack(
-                        alignment: Alignment.topRight,
-                        children: [
-                          CircleAvatar(
-                            radius: 30,
-                            backgroundColor: const Color(0xFFE4F6FF),
-                            child: const CircleAvatar(
-                              radius: 18,
-                              backgroundColor: Color(0xFFB7C6E6),
-                            ),
-                          ),
-                          const Positioned(
-                            right: 0,
-                            top: 0,
-                            child: CircleAvatar(
-                              radius: 9,
-                              backgroundColor: Colors.white,
-                              child: CircleAvatar(
-                                radius: 6,
-                                backgroundColor: Color(0xFFF69171),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Opacity(
-                    opacity: 0.5,
-                    child: Text(
-                      user?.email ?? "",
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    focusNode: _focusNode,
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Search gifts...',
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.search),
-                        onPressed: () {
-                          final keyword = _searchController.text.trim();
-                          if (keyword.isNotEmpty) {
-                            Navigator.pushNamed(context, '/searchResult', arguments: keyword);
-                          }
-                        },
-                      ),
-                      filled: true,
-                      fillColor: const Color(0xFFF2F2F2),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(13),
-                    child: Container(
-                      width: double.infinity,
-                      height: 160,
-                      decoration: const BoxDecoration(color: Colors.black12),
-                      child: Stack(
-                        children: [
-                          Positioned.fill(
-                            child: Image.asset(
-                              "assets/categories/fruits.png",
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Get 60%\nDiscount Now',
-                                  style: TextStyle(
-                                    color: Color(0xFFFED302),
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  '*Applicable on selective products',
-                                  style: TextStyle(color: Colors.white, fontSize: 10),
-                                ),
-                                const SizedBox(height: 10),
-                                SizedBox(
-                                  width: 110,
-                                  height: 25,
-                                  child: ElevatedButton(
-                                    onPressed: () {},
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(25),
-                                      ),
-                                      padding: EdgeInsets.zero,
-                                      elevation: 0,
-                                    ),
-                                    child: const Text(
-                                      '🛒 Order now',
-                                      style: TextStyle(color: Colors.black),
-                                    ),
-                                  ),
-                                )
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      Text(
-                        'Categories',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                      ),
-                      Text(
-                        'View all',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Color(0xFF0D63D1),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
-                      alignment: WrapAlignment.center,
+          onTap: () => _focusNode.unfocus(),
+          behavior: HitTestBehavior.translucent,
+          child: Stack(
+            children: [
+              SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: width * 0.05),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildCategory("Vegetables & Fruits", "assets/categories/vegetables.png", Color(0xFFEDF8E7), Color(0xFF47712F)),
-                        _buildCategory("Fast foods", "assets/categories/fast_foods.png", Color(0xFFFFF3E5), Color(0xFF865214)),
-                        _buildCategory("Dairy products", "assets/categories/dairy.png", Color(0xFFE4F6F6), Color(0xFF3C5D5D)),
-                        _buildCategory("Home care", "assets/categories/home_care.png", Color(0xFFFEF7E5), Color(0xFF6F5614)),
+                        Text(
+                          'Hi, $userName',
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.shopping_cart_outlined, color: Color.fromARGB(255, 33, 96, 243), size: 28),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const CartPage()),
+                            );
+                          },
+                        ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ),
-            if (_focusNode.hasFocus && _suggestions.isNotEmpty)
-              Positioned(
-                top: 180,
-                left: width * 0.05,
-                right: width * 0.05,
-                child: Material(
-                  elevation: 4,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                    const SizedBox(height: 8),
+                    Opacity(
+                      opacity: 0.5,
+                      child: Text(
+                        user?.email ?? "",
+                        style: const TextStyle(fontSize: 16),
+                      ),
                     ),
-                    child: _isLoadingSuggestions
-                        ? const Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Center(child: CircularProgressIndicator()),
-                          )
-                        : ListView(
-                            padding: EdgeInsets.zero,
-                            shrinkWrap: true,
-                            children: _suggestions
-                                .map((s) => ListTile(
-                                      title: Text(s),
-                                      onTap: () {
-                                        _searchController.text = s;
-                                        _focusNode.unfocus();
-                                      },
-                                    ))
-                                .toList(),
+                    const SizedBox(height: 16),
+                    TextField(
+                      focusNode: _focusNode,
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search gifts...',
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.search),
+                          onPressed: () {
+                            final keyword = _searchController.text.trim();
+                            if (keyword.isNotEmpty) {
+                              Navigator.pushNamed(context, '/searchResult', arguments: keyword);
+                            }
+                          },
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFF2F2F2),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(13),
+                      child: Container(
+                        width: double.infinity,
+                        height: 160,
+                        decoration: const BoxDecoration(color: Colors.black12),
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: Image.asset(
+                                "assets/categories/fruits.png",
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Get 60%\nDiscount Now',
+                                    style: TextStyle(
+                                      color: Color(0xFFFED302),
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    '*Applicable on selective products',
+                                    style: TextStyle(color: Colors.white, fontSize: 10),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  SizedBox(
+                                    width: 110,
+                                    height: 25,
+                                    child: ElevatedButton(
+                                      onPressed: () {},
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(25),
+                                        ),
+                                        padding: EdgeInsets.zero,
+                                        elevation: 0,
+                                      ),
+                                      child: const Text(
+                                        '🛒 Order now',
+                                        style: TextStyle(color: Colors.black),
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: const [
+                        Text(
+                          'Categories',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                        ),
+                        Text(
+                          'View all',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFF0D63D1),
+                            fontWeight: FontWeight.w500,
                           ),
-                  ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: Wrap(
+                        spacing: 16,
+                        runSpacing: 16,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          _buildCategory("Vegetables & Fruits", "assets/categories/vegetables.png", Color(0xFFEDF8E7), Color(0xFF47712F)),
+                          _buildCategory("Fast foods", "assets/categories/fast_foods.png", Color(0xFFFFF3E5), Color(0xFF865214)),
+                          _buildCategory("Dairy products", "assets/categories/dairy.png", Color(0xFFE4F6F6), Color(0xFF3C5D5D)),
+                          _buildCategory("Home care", "assets/categories/home_care.png", Color(0xFFFEF7E5), Color(0xFF6F5614)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                 ),
               ),
-          ],
+              if (_focusNode.hasFocus && _suggestions.isNotEmpty)
+                Positioned(
+                  top: 180,
+                  left: width * 0.05,
+                  right: width * 0.05,
+                  child: Material(
+                    elevation: 4,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: _isLoadingSuggestions
+                          ? const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Center(child: CircularProgressIndicator()),
+                            )
+                          : ListView(
+                              padding: EdgeInsets.zero,
+                              shrinkWrap: true,
+                              children: _suggestions
+                                  .map((s) => ListTile(
+                                        title: Text(s),
+                                        onTap: () {
+                                          _searchController.text = s;
+                                          _focusNode.unfocus();
+                                        },
+                                      ))
+                                  .toList(),
+                            ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }

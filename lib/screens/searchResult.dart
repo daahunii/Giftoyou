@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SearchResultPage extends StatefulWidget {
   final String keyword;
@@ -82,6 +84,27 @@ class _SearchResultPageState extends State<SearchResultPage> {
     } catch (e) {
       print('❌ 오류 발생: $e');
     }
+  }
+
+  Future<void> saveCartToFirebase() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final uid = user.uid;
+    final cartData = cart.entries.map((entry) {
+      final item = _results[entry.key];
+      return {
+        'image': item['image'],
+        'title': item['title'].replaceAll(RegExp(r'<[^>]*>'), ''),
+        'mallName': item['mallName'] ?? '알 수 없음',
+        'lprice': item['lprice'],
+        'quantity': entry.value,
+      };
+    }).toList();
+
+    await FirebaseFirestore.instance.collection('carts').doc(uid).set({
+      'items': cartData,
+    });
   }
 
   @override
@@ -223,25 +246,34 @@ class _SearchResultPageState extends State<SearchResultPage> {
                     left: 16,
                     right: 16,
                     bottom: 32,
-                    child: Container(
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0D63D1),
-                        borderRadius: BorderRadius.circular(32),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '총 ${totalItemCount}개 | ${formatCurrencyInt(totalPrice)}원',
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                          const Text(
-                            'VIEW CART 🍭️',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                        ],
+                    child: GestureDetector(
+                      onTap: () async {
+                        await saveCartToFirebase();
+                        setState(() => cart.clear());
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('장바구니에 상품들이 추가되었어요!')),
+                        );
+                      },
+                      child: Container(
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0D63D1),
+                          borderRadius: BorderRadius.circular(32),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '총 ${totalItemCount}개 | ${formatCurrencyInt(totalPrice)}원',
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            const Text(
+                              '장바구니 담기 🛍️',
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

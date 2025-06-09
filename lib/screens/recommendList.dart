@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:giftoyou/screens/home.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:giftoyou/screens/home.dart';
 
 class RecommendListPage extends StatefulWidget {
   final String friendName;
@@ -19,17 +21,20 @@ class RecommendListPage extends StatefulWidget {
 }
 
 class _RecommendListPageState extends State<RecommendListPage> {
-  final Map<int, int> cart = {}; // item index -> quantity
-  String formatCurrency(String price) { // 숫자를 천 단위로 포맷팅하는 함수
+  final Map<int, int> cart = {};
+
+  String formatCurrency(String price) {
     final formatter = NumberFormat('#,###');
     return formatter.format(int.parse(price));
   }
+
   String formatCurrencyInt(int price) {
     final formatter = NumberFormat('#,###');
     return formatter.format(price);
   }
 
   int get totalItemCount => cart.values.fold(0, (a, b) => a + b);
+
   int get totalPrice {
     int sum = 0;
     widget.naverResults.forEach((_, list) {
@@ -45,6 +50,27 @@ class _RecommendListPageState extends State<RecommendListPage> {
 
   List<Map<String, dynamic>> get items {
     return widget.naverResults.values.expand((e) => List<Map<String, dynamic>>.from(e)).toList();
+  }
+
+  Future<void> saveCartToFirebase() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final uid = user.uid;
+    final cartData = cart.entries.map((entry) {
+      final item = items[entry.key];
+      return {
+        'image': item['image'],
+        'title': item['title'].replaceAll(RegExp(r'<[^>]*>'), ''),
+        'lprice': item['lprice'],
+        'quantity': entry.value,
+        'mallName': item['mallName'] ?? '알 수 없음',
+      };
+    }).toList();
+
+    await FirebaseFirestore.instance.collection('carts').doc(uid).set({
+      'items': cartData,
+    });
   }
 
   @override
@@ -110,14 +136,15 @@ class _RecommendListPageState extends State<RecommendListPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SizedBox(
-                        height: 120, // 또는 120 등 조정 가능
+                        height: 120,
                         width: double.infinity,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(12),
                           child: Image.network(
                             image,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.broken_image),
                           ),
                         ),
                       ),
@@ -136,7 +163,9 @@ class _RecommendListPageState extends State<RecommendListPage> {
                       const SizedBox(height: 4),
                       Text(
                         "${formatCurrency(lprice)}원",
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 24, 67, 175)),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 24, 67, 175)),
                       ),
                       const SizedBox(height: 9),
                       Align(
@@ -151,10 +180,12 @@ class _RecommendListPageState extends State<RecommendListPage> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFFDCF0FA),
                                   foregroundColor: Colors.blue,
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 7),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 7),
                                   minimumSize: const Size(40, 32),
                                 ),
-                                child: const Text('선물하기', style: TextStyle(fontSize: 15)),
+                                child: const Text('선물하기',
+                                    style: TextStyle(fontSize: 15)),
                               )
                             : Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -172,10 +203,9 @@ class _RecommendListPageState extends State<RecommendListPage> {
                                       });
                                     },
                                   ),
-                                  Text(
-                                    '${cart[index]}',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                  ),
+                                  Text('${cart[index]}',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold)),
                                   IconButton(
                                     icon: const Icon(Icons.add),
                                     iconSize: 20,
@@ -196,36 +226,47 @@ class _RecommendListPageState extends State<RecommendListPage> {
           ),
           if (cart.isNotEmpty)
             Positioned(
-              left: 16,
-              right: 16,
-              bottom: 32,
-              child: Container(
-                height: 60,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0D63D1),
-                  borderRadius: BorderRadius.circular(32),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '총 ${totalItemCount}개 | ${formatCurrencyInt(totalPrice)}원',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+              left: 20,
+              right: 20,
+              bottom: 50,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () async {
+                  print('장바구니 버튼 클릭됨');
+                  await saveCartToFirebase();
+                  setState(() => cart.clear());
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('장바구니에 상품들이 추가되었어요!')),
+                  );
+                },
+                child: Container(
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0D63D1),
+                    borderRadius: BorderRadius.circular(32),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '총 ${totalItemCount}개 | ${formatCurrencyInt(totalPrice)}원',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
-                    ),
-                    const Text(
-                      'VIEW CART 🛍️',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                      const Text(
+                        '장바구니 담기 🛍️',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
