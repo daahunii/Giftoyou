@@ -162,7 +162,7 @@ class _AddFriendsState extends State<AddFriends> {
                 ),
               ),
               SizedBox(height: height * 0.05),
-              _buildTextField("추가할 친구 이름 입력", _nameController),
+              _buildTextField("친구의 이름을 입력하세요", _nameController),
               const SizedBox(height: 16),
               GestureDetector(
                 onTap: () => _selectBirthday(context),

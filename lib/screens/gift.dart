@@ -254,7 +254,7 @@ class _GiftState extends State<Gift> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Categories',
+                          '카테고리',
                           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                         ),
                         GestureDetector(
@@ -262,7 +262,7 @@ class _GiftState extends State<Gift> {
                             Navigator.pushNamed(context, '/categories');
                           },
                           child: const Text(
-                            'View all',
+                            '모두 보기',
                             style: TextStyle(
                               fontSize: 16,
                               color: Color(0xFF0D63D1),
