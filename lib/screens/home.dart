@@ -169,7 +169,7 @@ class _HomeContentState extends State<HomeContent> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  "당신의 소중한 사람들을 위해 선물 해보세요!",
+                  "소중한 사람들에게 행복을 전하세요!",
                   style: TextStyle(
                     fontSize: 16,
                     color: Color(0xFFA0A3B2),
@@ -343,7 +343,7 @@ class _HomeContentState extends State<HomeContent> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: Image.network(image, height: 120, fit: BoxFit.cover),
+                  child: Image.network(image, width: 150, height: 120, fit: BoxFit.cover),
                 ),
                 const SizedBox(height: 6),
                 Text(

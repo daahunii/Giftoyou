@@ -145,7 +145,7 @@ class _GiftState extends State<Gift> {
                       children: [
                         Text(
                           'Hi, $userName',
-                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400),
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
                         ),
                         IconButton(
                           icon: const Icon(Icons.shopping_cart_outlined, color: Color.fromARGB(255, 33, 96, 243), size: 28),
