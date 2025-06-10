@@ -171,7 +171,7 @@ class _GiftState extends State<Gift> {
                       focusNode: _focusNode,
                       controller: _searchController,
                       decoration: InputDecoration(
-                        hintText: 'Search gifts...',
+                        hintText: ' 추천 선물 검색',
                         suffixIcon: IconButton(
                           icon: const Icon(Icons.search),
                           onPressed: () {
@@ -210,19 +210,19 @@ class _GiftState extends State<Gift> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'Get 60%\nDiscount Now',
+                                    '최대 60%\n파격 할인 중',
                                     style: TextStyle(
                                       color: Color(0xFFFED302),
                                       fontSize: 22,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 5),
                                   const Text(
                                     '*Applicable on selective products',
                                     style: TextStyle(color: Colors.white, fontSize: 10),
                                   ),
-                                  const SizedBox(height: 10),
+                                  const SizedBox(height: 8),
                                   SizedBox(
                                     width: 110,
                                     height: 25,
@@ -237,8 +237,8 @@ class _GiftState extends State<Gift> {
                                         elevation: 0,
                                       ),
                                       child: const Text(
-                                        '🛒 Order now',
-                                        style: TextStyle(color: Colors.black),
+                                        '🛒 구매하기',
+                                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800),
                                       ),
                                     ),
                                   )
