@@ -154,7 +154,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                     TextField(
                       controller: _emailController,
                       decoration: InputDecoration(
-                        hintText: 'example@gmail.com',
+                        hintText: '이메일 주소(example@gmail.com)',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -174,7 +174,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                       controller: _passwordController,
                       obscureText: _obscureText,
                       decoration: InputDecoration(
-                        hintText: 'Enter Your Password',
+                        hintText: '비밀번호 입력',
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscureText ? Icons.visibility_off : Icons.visibility,
@@ -205,7 +205,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                         ),
                         onPressed: _loginWithEmail,
                         child: const Text(
-                          'Login',
+                          '로그인',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -231,7 +231,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                       height: 44,
                       child: OutlinedButton.icon(
                         icon: Image.asset("assets/google.png", width: 20, height: 20, errorBuilder: (c, e, s) => Icon(Icons.error)),
-                        label: const Text("Login with Google", style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
+                        label: const Text("Google 계정으로 로그인", style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
                         onPressed: () {},
                         style: OutlinedButton.styleFrom(
                           shape: RoundedRectangleBorder(
@@ -246,7 +246,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                       height: 44,
                       child: ElevatedButton.icon(
                         icon: Image.asset("assets/facebook.png", width: 20, height: 20, errorBuilder: (c, e, s) => Icon(Icons.error)),
-                        label: const Text("Login with Facebook", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                        label: const Text("Facebook 계정으로 로그인", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1877F2),
                           shape: RoundedRectangleBorder(
@@ -260,7 +260,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text("Don’t have an account? "),
+                        const Text("혹시 계정이 없으신가요? "),
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
@@ -269,7 +269,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                             );
                           },
                           child: const Text(
-                            "Sign Up",
+                            "회원가입",
                             style: TextStyle(
                               color: Color(0xFF160062),
                               fontWeight: FontWeight.bold,

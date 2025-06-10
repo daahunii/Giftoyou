@@ -95,7 +95,7 @@ class _SignUpState extends State<SignUp> with SingleTickerProviderStateMixin {
           children: [
             const SizedBox(height: 30),
             const Text(
-              'Create an account',
+              '회원가입',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
@@ -104,13 +104,13 @@ class _SignUpState extends State<SignUp> with SingleTickerProviderStateMixin {
               style: TextStyle(fontSize: 13),
             ),
             const SizedBox(height: 24),
-            _buildTextField(controller: _usernameController, hintText: 'Enter Your Username'),
+            _buildTextField(controller: _usernameController, hintText: '이름을 입력해주세요'),
             const SizedBox(height: 16),
-            _buildTextField(controller: _emailController, hintText: 'Enter Your Email'),
+            _buildTextField(controller: _emailController, hintText: '이메일 주소를 입력해주세요'),
             const SizedBox(height: 16),
             _buildTextField(
               controller: _phoneController,
-              hintText: 'Enter Your Phone Number',
+              hintText: '휴대폰 번호 입력 (010-xxxx-xxxx)',
               keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: 16),
@@ -118,7 +118,7 @@ class _SignUpState extends State<SignUp> with SingleTickerProviderStateMixin {
               controller: _passwordController,
               obscureText: _obscurePassword,
               decoration: InputDecoration(
-                hintText: 'Enter Your Password',
+                hintText: '비밀번호 입력 (최소 6자 이상)',
                 suffixIcon: IconButton(
                   icon: Icon(
                     _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -146,7 +146,7 @@ class _SignUpState extends State<SignUp> with SingleTickerProviderStateMixin {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                 ),
                 onPressed: _signUp,
-                child: const Text('Sign Up', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                child: const Text('가입하기', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 20),
@@ -166,7 +166,7 @@ class _SignUpState extends State<SignUp> with SingleTickerProviderStateMixin {
               height: 44,
               child: OutlinedButton.icon(
                 icon: Image.asset("assets/google.png", width: 20, height: 20, errorBuilder: (c, e, s) => const Icon(Icons.error)),
-                label: const Text("Signup with Google", style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
+                label: const Text("Google 계정으로 시작", style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
                 onPressed: () {},
                 style: OutlinedButton.styleFrom(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -179,7 +179,7 @@ class _SignUpState extends State<SignUp> with SingleTickerProviderStateMixin {
               height: 44,
               child: ElevatedButton.icon(
                 icon: Image.asset("assets/facebook.png", width: 20, height: 20, errorBuilder: (c, e, s) => const Icon(Icons.error)),
-                label: const Text("Signup with Facebook", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                label: const Text("Facebook 계정으로 시작", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1877F2),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -191,10 +191,17 @@ class _SignUpState extends State<SignUp> with SingleTickerProviderStateMixin {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text("Already have an account? "),
+                const Text("이미 계정이 있으신가요? "),
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: const Text("Login", style: TextStyle(color: Color(0xFF0D63D1), fontWeight: FontWeight.bold)),
+                  child: 
+                    const Text("로그인",
+                      style: TextStyle(
+                      color: Color(0xFF160062),
+                      fontWeight: FontWeight.bold,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
                 ),
               ],
             ),
