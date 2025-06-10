@@ -162,7 +162,7 @@ class _AddFriendsState extends State<AddFriends> {
                 ),
               ),
               SizedBox(height: height * 0.05),
-              _buildTextField("Enter friend Username", _nameController),
+              _buildTextField("추가할 친구 이름 입력", _nameController),
               const SizedBox(height: 16),
               GestureDetector(
                 onTap: () => _selectBirthday(context),
@@ -170,7 +170,7 @@ class _AddFriendsState extends State<AddFriends> {
                   child: TextField(
                     controller: _birthdayController,
                     decoration: InputDecoration(
-                      hintText: "Select friend's birthday",
+                      hintText: "친구의 생일을 선택해주세요",
                       suffixIcon: const Icon(Icons.calendar_today),
                       hintStyle: TextStyle(color: Colors.black.withOpacity(0.6)),
                       enabledBorder: OutlineInputBorder(
@@ -191,7 +191,7 @@ class _AddFriendsState extends State<AddFriends> {
                 ),
               ),
               const SizedBox(height: 16),
-              _buildTextField("Enter friend SNS account", _snsController),
+              _buildTextField("친구의 SNS(Instagram) 계정 입력", _snsController),
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
